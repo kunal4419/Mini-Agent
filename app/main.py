@@ -33,14 +33,15 @@ app.add_middleware(
 # Get the static directory path
 STATIC_DIR = Path(__file__).parent.parent / "static"
 
-# Mount static files
+# Mount static files at /static (not at root!)
 if STATIC_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 @app.get("/")
+@app.head("/")
 async def serve_chat():
-    """Serve the chat interface"""
+    """Serve the chat interface (supports GET and HEAD for health checks)"""
     index_file = STATIC_DIR / "index.html"
     if index_file.exists():
         return FileResponse(index_file)
@@ -49,6 +50,15 @@ async def serve_chat():
         message="Mini-Agent is running with Google Gemini!",
         timestamp=datetime.now().isoformat()
     )
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Return favicon or 204 if not found"""
+    favicon_file = STATIC_DIR / "favicon.svg"
+    if favicon_file.exists():
+        return FileResponse(favicon_file)
+    return Response(status_code=204)
 
 
 @app.head("/", include_in_schema=False)
