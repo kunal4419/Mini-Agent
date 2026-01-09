@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -35,7 +35,7 @@ STATIC_DIR = Path(__file__).parent.parent / "static"
 
 # Mount static files
 if STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    app.mount("/", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 @app.get("/")
@@ -49,6 +49,12 @@ async def serve_chat():
         message="Mini-Agent is running with Google Gemini!",
         timestamp=datetime.now().isoformat()
     )
+
+
+@app.head("/", include_in_schema=False)
+def head_home():
+    # Render health checks may use HEAD
+    return Response(status_code=200)
 
 
 @app.get("/health", response_model=HealthResponse)
